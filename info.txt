@@ -1,0 +1,5 @@
+Username = Rokum
+Password = SamplePassword123
+String = mongodb+srv://Rokum:<password>@cluster0.ivkcmnc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
+
