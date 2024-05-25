@@ -28,3 +28,19 @@ In the Express request methods
     req.cookie
 */
 
+
+// For Password Hashing we will use the bcrypt lib
+// For web token we will use jwt (Json Web Token)  
+
+// the hardest and most challenging part of this project is the videoHistory setup => {
+     for that we are gonna use the mongodb Aggregation pipiline lib
+}
+
+// JWT -=> {
+    it is a bearer token {
+        anyone have this token they can access the data 
+    }
+    {
+        we only give the refresh token to the user database
+    }
+}
