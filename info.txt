@@ -3,3 +3,28 @@ Password = SamplePassword123
 String = mongodb+srv://Rokum:<password>@cluster0.ivkcmnc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 
 
+We use app.use => {
+    When we mostly do Configurational settings or the middelware Settings
+    cros = Cross-Origin Resource Sharing [used to connect the ForntEnd to the BackEnd]
+}
+
+CookieParser => {
+    use: (
+        server see Cookies accept and action perferm kar pao 
+    )
+}
+
+MiddleWare => {
+    whatis: (
+        
+    )
+}
+
+/*
+In the Express request methods
+    we mostly will use ...
+    req.body
+    req.params
+    req.cookie
+*/
+

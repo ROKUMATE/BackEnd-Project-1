@@ -1,18 +1,35 @@
-// Whenever Talk with DataBase always use Try/Catch and Async/Await 
+// Whenever Talk with DataBase always use Try/Catch and Async/Await
 
-// import mongoose from "mongoose";
-// import { DB_NAME } from "./constants.js";
+import mongoose from "mongoose";
+import { DB_NAME } from "./constants.js";
 import connectDB from "./db/index.js";
 import dotenv from "dotenv";
+import { app } from "./app.js";
+
+const port = process.env.PORT || 3000;
 
 // Load environment variables from .env file
 dotenv.config({
-    path: './.env'
+    path: "./.env",
 });
 
-connectDB();
-
-
+connectDB()
+    .then((response) => {
+        try {
+            app.on("error", () => {
+                console.log("Error: ", error);
+                throw error;
+            });
+            app.listen(port, () => {
+                console.log(`The Server is running at the Port: ${port}`);
+            });
+        } catch (err) {
+            console.log("There was an error: ", err);
+        }
+    })
+    .catch((error) => {
+        console.log(`MONGO DB Connection Failed : `, err);
+    });
 
 /*
 import express from "express";
