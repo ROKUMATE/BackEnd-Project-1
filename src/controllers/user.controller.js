@@ -51,9 +51,47 @@ const registerUser = asyncHandler(async (req, res) => {
         );
     }
 
+    // Additional Point (req.files)
+    // console.log(req.files);
+    // [Object: null prototype] {
+    //     avatar: [
+    //       {
+    //         fieldname: 'avatar',
+    //         originalname: 'Quantom Atom 3.jpg',
+    //         encoding: '7bit',
+    //         mimetype: 'image/jpeg',
+    //         destination: './public/temp',
+    //         filename: 'Quantom Atom 3.jpg',
+    //         path: 'public/temp/Quantom Atom 3.jpg',
+    //         size: 659405
+    //       }
+    //     ],
+    //     coverImage: [
+    //       {
+    //         fieldname: 'coverImage',
+    //         originalname: 'Kali linux 1.png',
+    //         encoding: '7bit',
+    //         mimetype: 'image/png',
+    //         destination: './public/temp',
+    //         filename: 'Kali linux 1.png',
+    //         path: 'public/temp/Kali linux 1.png',
+    //         size: 4712326
+    //       }
+    //     ]
+    //   }
+
     // 4. Check for images, Check for avatar
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // This might be wrong
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    let coverImageLocalPath;
+    if (
+        req.files &&
+        Array.isArray(req.files.coverImage) &&
+        req.files.coverImage.length > 0
+    ) {
+        coverImageLocalPath = req.files?.coverImage[0]?.path;
+    }
     if (!avatarLocalPath) throw new ApiError(400, "Avatar file is required");
 
     // 5. Upload them to Cloudinary,  avatar
