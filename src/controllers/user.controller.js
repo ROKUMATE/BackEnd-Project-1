@@ -4,6 +4,25 @@ import { User } from "../model/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+const generateAccessAndRefereshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+
+        user.refreshToken = refreshToken;
+        // This will tell that not to check the other required fields
+        await user.save({ validateBeforeSave: false });
+
+        return { accessToken, refreshToken };
+    } catch (err) {
+        throw new ApiError(
+            500,
+            "Something Went wrong while sending the access and referesh tokens back"
+        );
+    }
+};
+
 const registerUser = asyncHandler(async (req, res) => {
     // res.status(200).json({ message: "Server is starting" });
     /* 
@@ -137,4 +156,73 @@ const registerUser = asyncHandler(async (req, res) => {
         );
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+    // All Steps
+    /*
+    1. req.body -> data
+    2. username / email based access
+    3. find the user 
+    4. password check
+    5. access and refresh token generation
+    6. send in secure cookie the refresh and access token
+    */
+
+    //    1. req.body -> data
+    const { email, username, password } = req.body;
+    if (!username || !email) {
+        throw new ApiError(400, "Username or email is required");
+    }
+
+    //    2. username / email based access
+    const user = await User.findOne({
+        $or: [{ username }, { email }],
+    });
+
+    //    3. find the user
+    if (!user) {
+        throw new ApiError(404, "User does not exist)");
+    }
+
+    //    4. password check
+    // Note one thing The "User" is a mongoDB object not an local object ... The "user" is the local object that we fetched from the mongodb
+    const passwordCheck = await user.isPasswordCorrect(password);
+    if (!passwordCheck) {
+        throw new ApiError(401, "Invalid User Credentials");
+    }
+
+    //    5. access and refresh token generation
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+        user._id
+    );
+
+    //    6. send in secure cookie the refresh and access token
+    const loggedInUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        // The Above two lines means the cookies are modified by only the server
+    };
+
+    return re
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    accessToken,
+                    refreshToken,
+                },
+                "User Logged in Successfully"
+            )
+        );
+});
+
+const logoutUser = asyncHandler(async (req, res) => {});
+
+export { registerUser, loginUser, logoutUser };
