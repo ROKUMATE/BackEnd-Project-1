@@ -49,11 +49,8 @@ const userSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Mongoose MiddleWare => { We Want to encrypt our passwrod just before it is saved in the database }
-// for that we use the Pre Hooks
-// userSchema.pre("save", () => {}) // Never write like this (As in arrow function we dont have teh referance to "this")
-// and we use async as it takes time for encrypting and decrypting as well
-
+// dcrypt Lib Use
+// This is for saving the password in the Encrypted form and not in the plain text form in the database!
 userSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
         // bcrypt.hash("WHAT TO HASH", "HOW MANY ROUNDS TO HASH")
@@ -70,6 +67,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
+// JWT Lib Use
 // Generating the Access token (in Access token we have more info)
 userSchema.methods.generateAccessToken = async function () {
     jwt.sign(

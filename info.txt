@@ -44,3 +44,16 @@ In the Express request methods
         we only give the refresh token to the user database
     }
 }
+
+// Mongoose MiddleWare => { We Want to encrypt our passwrod just before it is saved in the database }
+// for that we use the Pre Hooks
+// userSchema.pre("save", () => {}) // Never write like this (As in arrow function we dont have teh referance to "this")
+// and we use async as it takes time for encrypting and decrypting as well
+
+
+For File Uploading we are using the toolkit / Lib named as "multer" , "fs (File System module by nodejs)" => {
+    site => [https://github.com/expressjs/multer]
+
+    to remove a file we will use the unlink technique[]
+
+}
