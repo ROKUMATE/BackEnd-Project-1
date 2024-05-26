@@ -41,7 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // 3. Check if the user already exists or not { Check either by username or name }
-    const ExistedUser = User.findOne({
+    const ExistedUser = await User.findOne({
         $or: [{ username }, { email }],
     });
     if (ExistedUser) {
@@ -71,6 +71,7 @@ const registerUser = asyncHandler(async (req, res) => {
         coverImage: coverImage?.url || "",
         email,
         password,
+        // username: username.toLowerCase(),
         username: username.toLowerCase(),
     });
 
