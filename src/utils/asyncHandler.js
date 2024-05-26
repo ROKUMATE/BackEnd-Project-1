@@ -1,7 +1,16 @@
 // const asyncHandler = () => {};
 
+// A False or a error / Bug Function
+// const asyncHandler = (requestHandler) => {
+//     (req, res, next) => {
+//         Promise.resolve(requestHandler(req, res, next)).catch((err) => {
+//             next(err);
+//             // The next(err) will transfer the error to the next middleware in the line
+//         });
+//     };
+// };
 const asyncHandler = (requestHandler) => {
-    (req, res, next) => {
+    return (req, res, next) => {
         Promise.resolve(requestHandler(req, res, next)).catch((err) => {
             next(err);
             // The next(err) will transfer the error to the next middleware in the line
