@@ -1,9 +1,16 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET, // Click 'View Credentials' below to copy your API secret
+});
+
 // Uploading the File on Cloudinary
 const uploadOnCloudinary = async (localFilePath) => {
     try {
+        // If File Path is not mentioned then directly return null
         if (!localFilePath) return null;
 
         // Upload the File on Cloudinary
@@ -11,7 +18,7 @@ const uploadOnCloudinary = async (localFilePath) => {
             resource_type: "auto",
         });
 
-        // File Successfully
+        // File Successfully Uploaded
         console.log(
             "File is Succesfully uplaoded on the cloudinary",
             response.url
@@ -24,11 +31,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 };
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET, // Click 'View Credentials' below to copy your API secret
-});
+export { uploadOnCloudinary };
 
 // (async function () {
 //     // Configuration
