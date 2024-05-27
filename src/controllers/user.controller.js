@@ -102,6 +102,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //   }
 
     // 4. Check for images, Check for avatar
+    // console.log(req.files.avatar);
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // This might be wrong
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
@@ -172,9 +173,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
     //    1. req.body -> data
     const { email, username, password } = req.body;
-    if (!(username || email)) {
+    // We Want both username and email
+    if (!username && !email) {
         throw new ApiError(400, "Username or email is required");
     }
+
+    // Here is an Alternative for that if we want either of username or email
+    // if (!(username || email)) {
+    //     throw new ApiError(400, "Username or email is required");
+    // }
 
     //    2. username / email based access
     const user = await User.findOne({
@@ -209,7 +216,7 @@ const loginUser = asyncHandler(async (req, res) => {
         // The Above two lines means the cookies are modified by only the server
     };
 
-    return re
+    return res
         .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)

@@ -5,7 +5,7 @@ import { User } from "../model/user.model.js";
 
 const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
-        // Getting the token from the req {the mobile users cant send the req.cookies soo we there use the authorization part}
+        // Getting the token from the req { the mobile users cant send the req.cookies soo we there use the authorization part }
         const token =
             req.cookies?.accessToken ||
             req.header("Authorization")?.replace("Bearer ", "");
@@ -15,7 +15,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
             throw new ApiError(401, "Unauthorised Access");
         }
 
-        const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
+        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
         // Find the user in the database
         const user = await User.findById(decodedToken?._id).select(
