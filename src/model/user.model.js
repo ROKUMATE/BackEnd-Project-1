@@ -71,8 +71,9 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 
 // JWT Lib Use
 // Generating the Access token (in Access token we have more info)
-userSchema.methods.generateAccessToken = async function () {
-    jwt.sign(
+// If we make it async Function then it will return a [object promise] instead of an Access Token
+userSchema.methods.generateAccessToken = function () {
+    return jwt.sign(
         {
             _id: this.id,
             email: this.email,
@@ -87,8 +88,8 @@ userSchema.methods.generateAccessToken = async function () {
 };
 
 // Generating the Refresh token (In refresh token we have less info in it)
-userSchema.methods.generateRefreshToken = async function () {
-    jwt.sign(
+userSchema.methods.generateRefreshToken = function () {
+    return jwt.sign(
         {
             _id: this.id,
         },

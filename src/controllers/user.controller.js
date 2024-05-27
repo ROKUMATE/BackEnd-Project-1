@@ -14,6 +14,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
         user.refreshToken = refreshToken;
         // This will tell that not to check the other required fields
         await user.save({ validateBeforeSave: false });
+        // console.log(`${accessToken} "This is the Access Token"`);
 
         return { accessToken, refreshToken };
     } catch (err) {
@@ -216,6 +217,10 @@ const loginUser = asyncHandler(async (req, res) => {
         // The Above two lines means the cookies are modified by only the server
     };
 
+    // console.log(`${user.username} user Logged in`);
+    // console.log(`${accessToken} user access Tokens`);
+    // console.log(`${refreshToken} user refresh Tokens`);
+
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
@@ -252,7 +257,8 @@ const logoutUser = asyncHandler(async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .jsonResponse(200, {}, "User Logged Out");
+        .json(new ApiResponse(200, {}, "user logged out successfully"));
+    // .jsonResponse(200, {}, "User Logged Out");
 });
 
 export { registerUser, loginUser, logoutUser };
