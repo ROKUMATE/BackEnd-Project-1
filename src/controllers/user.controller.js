@@ -272,7 +272,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 // When the Users access token expire then then frontend will hit this method to refresht he users access token
-const refreshAccessToken = asyncHandler(async (req, rs) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     // 1. Getting the Refresh token from the cookie or the body
     const incomingRefreshToken =
         req.cookies.refreshToken || req.body.refreshToken;
@@ -306,17 +306,25 @@ const refreshAccessToken = asyncHandler(async (req, rs) => {
             secure: true,
         };
 
-        const { accessToken, newrefreshToken } =
+        const { accessToken, refreshToken } =
             await generateAccessAndRefereshTokens(user._id);
-        return res
-            .status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", newrefreshToken, options)
-            .ApiResponse(
-                200,
-                { accessToken: accessToken, refreshToken: newrefreshToken },
-                "Cookie Recreated"
-            );
+        return (
+            res
+                .status(200)
+                .cookie("accessToken", accessToken, options)
+                .cookie("refreshToken", refreshToken, options)
+                // mistake was over here in the syntax (Previously it was ApiResponse( ... ) and not it is json (new ApiResponse( ... ))
+                .json(
+                    new ApiResponse(
+                        200,
+                        {
+                            accessToken: accessToken,
+                            refreshToken: refreshToken,
+                        },
+                        "Cookie Recreated"
+                    )
+                )
+        );
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid Refresh token");
     }
