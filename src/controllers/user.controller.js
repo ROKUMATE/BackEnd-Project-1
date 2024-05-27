@@ -3,15 +3,20 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../model/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt, { decode } from "jsonwebtoken";
 
 // Function to Generate the Access and Refresh Tokens
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
-        const user = await User.findById(userId);
+        const user = await User.findById(userId); // the user is the reference to the userID Database one
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
+        // console.log(
+        //     "\\\\ \\\\ \\\\ \\\\ After Generating the access and the Refresh tokens \\\\ \\\\ \\\\ \\\\ ",
+        //     user
+        // );
         // This will tell that not to check the other required fields
         await user.save({ validateBeforeSave: false });
         // console.log(`${accessToken} "This is the Access Token"`);
@@ -205,6 +210,11 @@ const loginUser = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
         user._id
     );
+    // Checking Purpose
+    // console.log(
+    //     "\\\\ \\\\ \\\\ \\\\ After the Function of Generating the access and the Refresh tokens \\\\ \\\\ \\\\ \\\\ ",
+    //     user
+    // );
 
     //    6. send in secure cookie the refresh and access token
     const loggedInUser = await User.findById(user._id).select(
@@ -259,6 +269,57 @@ const logoutUser = asyncHandler(async (req, res) => {
         .clearCookie("refreshToken", options)
         .json(new ApiResponse(200, {}, "user logged out successfully"));
     // .jsonResponse(200, {}, "User Logged Out");
+});
+
+// When the Users access token expire then then frontend will hit this method to refresht he users access token
+const refreshAccessToken = asyncHandler(async (req, rs) => {
+    // 1. Getting the Refresh token from the cookie or the body
+    const incomingRefreshToken =
+        req.cookies.refreshToken || req.body.refreshToken;
+
+    // 2. If Incoming refresh Token dont exist (Then the user is asking for the unauthorized acess)
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorized Request");
+    }
+
+    try {
+        // then get the original database _if from the refreshToken
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        );
+
+        // Check for the database entry of the user in the database with the given id
+        const user = await User.findById(decodedToken?._id);
+
+        if (!user) {
+            throw new ApiError(401, "Unauthorized Request");
+        }
+
+        if (incomingRefreshToken !== user?.refreshToken) {
+            // console.log("Something");
+            throw new ApiError(401, "Refresh Token is Expired Or Used");
+        }
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+        };
+
+        const { accessToken, newrefreshToken } =
+            await generateAccessAndRefereshTokens(user._id);
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newrefreshToken, options)
+            .ApiResponse(
+                200,
+                { accessToken: accessToken, refreshToken: newrefreshToken },
+                "Cookie Recreated"
+            );
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid Refresh token");
+    }
 });
 
 export { registerUser, loginUser, logoutUser };
