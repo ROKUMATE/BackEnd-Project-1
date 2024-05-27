@@ -4,6 +4,7 @@ import { User } from "../model/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+// Function to Generate the Access and Refresh Tokens
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
         const user = await User.findById(userId);
@@ -23,6 +24,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
     }
 };
 
+// Controller for Registering the User
 const registerUser = asyncHandler(async (req, res) => {
     // res.status(200).json({ message: "Server is starting" });
     /* 
@@ -156,6 +158,7 @@ const registerUser = asyncHandler(async (req, res) => {
         );
 });
 
+// Controller for Login of the Registered User
 const loginUser = asyncHandler(async (req, res) => {
     // All Steps
     /*
@@ -169,7 +172,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     //    1. req.body -> data
     const { email, username, password } = req.body;
-    if (!username || !email) {
+    if (!(username || email)) {
         throw new ApiError(400, "Username or email is required");
     }
 
@@ -223,6 +226,26 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
-const logoutUser = asyncHandler(async (req, res) => {});
+// Controller For Logout of an user
+const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(req.user._id, {
+        // $ sign means mongodb operators
+        $set: {
+            refreshToken: undefined,
+        },
+    });
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+        // The Above two lines means the cookies are modified by only the server
+    };
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .jsonResponse(200, {}, "User Logged Out");
+});
 
 export { registerUser, loginUser, logoutUser };
