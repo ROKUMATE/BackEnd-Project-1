@@ -330,4 +330,156 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+// Changing the users Current Password
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    // Getting the New Password from the user
+    const { oldPassword, newPassword, confPassword } = req.body;
+
+    // if (newPassword !== confPassword) {
+    //     throw new ApiError(
+    //         401,
+    //         "The New Password and the Confirm Password are not same"
+    //     );
+    // }
+
+    const user = await User.findById(req.user?._id);
+
+    if (await !user.isPasswordCorrect(oldPassword)) {
+        throw new ApiError(400, "Your entered Old password is incorrect");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password Sent Successfully"));
+});
+
+// Getting the Current User
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, req.user, "Current User Fetched Successfully")
+        );
+});
+
+// Update the account Details
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body;
+
+    if (!fullName || !email) {
+        throw new ApiError(400, "All Fields Are Required");
+    }
+
+    // new: true => {update hone kee badd joo info hae whoo return hote hae}
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                // We can even Write "fullName" only
+                fullName: fullName,
+                email: email,
+            },
+        },
+        { new: true }
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Accoutn Details updated successfully")
+        );
+});
+
+// Updating the files
+// while updating the files remember we need to add to middlewares the "Multer" one and the second "verify middleware"
+// Avatar Updaate
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    //
+    const avatarLocalPath = req.files?.path;
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar File is missing");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while Uploading the Avatar");
+    }
+
+    // Update in the user // Method 1 //
+    // const user = User.findById(req.user._id);
+    // user.avatar = avatar;
+    // user.save({ validateBeforeSave: false });
+
+    // Update in the user // Method 2 //
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            avatar: avatar.url,
+        },
+        { new: true }
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user,
+                "The update of the Avatar of the user was successful"
+            )
+        );
+});
+// CoverImageUpdate
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    //
+    const coverImageLocalPath = req.files?.path;
+
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "Cover Image File is missing");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if (!coverImage.url) {
+        throw new ApiError(400, "Error while Uploading the Cover Image");
+    }
+
+    // Update in the user // Method 1 //
+    // const user = User.findById(req.user._id);
+    // user.coverImage = coverImage;
+    // user.save({ validateBeforeSave: false });
+
+    // Update in the user // Method 2 //
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            coverImage: coverImage.url,
+        },
+        { new: true }
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user,
+                "The update of the cover Image of the user was successful"
+            )
+        );
+});
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCoverImage,
+};
