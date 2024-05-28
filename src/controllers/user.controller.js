@@ -1,9 +1,14 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../model/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+    uploadOnCloudinary,
+    deleteFromCloudinary,
+    extractPublicIdFromUrlOfCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt, { decode } from "jsonwebtoken";
+import cloudinary from "cloudinary";
 
 // Function to Generate the Access and Refresh Tokens
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -109,6 +114,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // 4. Check for images, Check for avatar
     // console.log(req.files.avatar);
+    // console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
     // This might be wrong
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
@@ -397,14 +403,44 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 // while updating the files remember we need to add to middlewares the "Multer" one and the second "verify middleware"
 // Avatar Updaate
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    //
-    const avatarLocalPath = req.files?.path;
+    // console.log(req.files?.newAvatar[0]);
+    const avatarLocalPath = req.files?.newAvatar[0].path;
+    // console.log(req.user);
+    // console.log("req.user.avatar : ", req.user.avatar);
+    const publicIdOfOldAvatar = extractPublicIdFromUrlOfCloudinary(
+        req.user.avatar
+    );
+    // // console.log(publicIdOfOldAvatar);
+    // const oldAvatarCloudinaryPublicId = req.user.avatar.public_id;
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar File is missing");
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
+    // console.log("Avatar awaited from uploadOnCloudinary: ", avatar);
+    // Avatar Object: {
+    //     asset_id: '937b388b14932e3b2192cc6d465d6cd5',
+    //     public_id: 'uppd7cxcwyfciauerycf',
+    //     version: 1716894010,
+    //     version_id: '421004de269b9ed64e5c137ba8beb2bf',
+    //     signature: '1759f40476d619fcf03d057f9f66bc71256370f0',
+    //     width: 380,
+    //     height: 234,
+    //     format: 'jpg',
+    //     resource_type: 'image',
+    //     created_at: '2024-05-28T11:00:10Z',
+    //     tags: [],
+    //     bytes: 32758,
+    //     type: 'upload',
+    //     etag: '569c243e654afb6da85248af4d040e84',
+    //     placeholder: false,
+    //     url: 'http://res.cloudinary.com/dah8h7uld/image/upload/v1716894010/uppd7cxcwyfciauerycf.jpg',
+    //     secure_url: 'https://res.cloudinary.com/dah8h7uld/image/upload/v1716894010/uppd7cxcwyfciauerycf.jpg',
+    //     folder: '',
+    //     original_filename: 'coverImage',
+    //     api_key: '193323934713672'
+    //   }
     if (!avatar.url) {
         throw new ApiError(400, "Error while Uploading the Avatar");
     }
@@ -414,60 +450,77 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     // user.avatar = avatar;
     // user.save({ validateBeforeSave: false });
 
-    // Update in the user // Method 2 //
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            avatar: avatar.url,
-        },
-        { new: true }
-    ).select("-password");
+    // Update in the user // Method 2 // Changing the avatar image old url to the new url // Correct
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                avatar: avatar.url,
+            },
+            { new: true }
+        ).select("-password");
+    } catch (error) {
+        throw new ApiError(
+            500,
+            "there was a server problem in replacing the avatar url with the new one"
+        );
+    }
+
+    // Deleting the previous avatar image url from the cloudinary
+    deleteFromCloudinary(publicIdOfOldAvatar);
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                user,
+                req.user,
                 "The update of the Avatar of the user was successful"
             )
         );
 });
 // CoverImageUpdate
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-    //
-    const coverImageLocalPath = req.files?.path;
+    // Same As that of the avatar so deleted all the comments
+
+    const coverImageLocalPath = req.files?.newCoverImage[0].path;
+    const publicIdOfOldCoverImage = extractPublicIdFromUrlOfCloudinary(
+        req.user.coverImage
+    );
 
     if (!coverImageLocalPath) {
-        throw new ApiError(400, "Cover Image File is missing");
+        throw new ApiError(400, "coverImage File is missing");
     }
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
     if (!coverImage.url) {
-        throw new ApiError(400, "Error while Uploading the Cover Image");
+        throw new ApiError(400, "Error while Uploading the coverImage");
     }
 
-    // Update in the user // Method 1 //
-    // const user = User.findById(req.user._id);
-    // user.coverImage = coverImage;
-    // user.save({ validateBeforeSave: false });
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                coverImage: coverImage.url,
+            },
+            { new: true }
+        ).select("-password");
+    } catch (error) {
+        throw new ApiError(
+            500,
+            "there was a server problem in replacing the coverImage url with the new one"
+        );
+    }
 
-    // Update in the user // Method 2 //
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            coverImage: coverImage.url,
-        },
-        { new: true }
-    ).select("-password");
+    deleteFromCloudinary(publicIdOfOldCoverImage);
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                user,
-                "The update of the cover Image of the user was successful"
+                req.user,
+                "The update of the CoverImage of the user was successful"
             )
         );
 });
