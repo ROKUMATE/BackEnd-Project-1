@@ -57,6 +57,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 };
 
+// To delete an entry in the cloudinary
 const deleteFromCloudinary = async (publicId) => {
     try {
         const result = await cloudinary.uploader.destroy(publicId);
@@ -78,6 +79,7 @@ const deleteFromCloudinary = async (publicId) => {
     }
 };
 
+// To extract the Public_id from the url given
 const extractPublicIdFromUrlOfCloudinary = (url) => {
     // Regular expression to match the public ID with any file extension
     const match = url.match(/\/([^\/]+)\.[^\/]+$/);
