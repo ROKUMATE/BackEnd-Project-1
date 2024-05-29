@@ -5,6 +5,11 @@ import {
     logoutUser,
     refreshAccessToken,
     updateUserAvatar,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    getUserChannelProfile,
+    getWatchHistory,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -33,9 +38,19 @@ router.route("/login").post(loginUser);
 router.route("/logout").post(verifyJWT, logoutUser);
 // For Refreshing the access token
 router.route("/refreshToken").post(refreshAccessToken);
+// Change Password
+router.route("./changePassword").post(verifyJWT, changeCurrentPassword);
+// Get Current User
+router.route("./current-user").get(verifyJWT, getCurrentUser);
+// Update Account Details
+// We Wont Put "POST" method here else every details will be updated in it
+router.route("./update-account").patch(verifyJWT, updateAccountDetails);
 // Update the user avatar
 router.route("/updateAvatar").post(
     verifyJWT,
+    // we can also use (M - 1)
+    // upload.single("newavatar")
+    // M - 2
     upload.fields([
         {
             name: "newAvatar",
@@ -47,6 +62,9 @@ router.route("/updateAvatar").post(
 // Update the user coverImage
 router.route("/updateCoverImage").post(
     verifyJWT,
+    // we can also use (M - 1)
+    // upload.single("newavatar")
+    // M - 2
     upload.fields([
         {
             name: "newCoverImage",
@@ -55,6 +73,10 @@ router.route("/updateCoverImage").post(
     ]),
     updateUserAvatar
 );
+// Get User Channel Profile
+router.route("/channel/:username").get(verifyJWT, getUserChannelProfile);
+// Get User Watch History
+router.route("/watchHistory").get(verifyJWT, getWatchHistory);
 
 export default router;
 
