@@ -1,3 +1,72 @@
 # My First Backend Project
 
-[Followed by chaiAurCode Backend Series]
+We use app.use => {
+When we mostly do Configurational settings or the middelware Settings
+cros = Cross-Origin Resource Sharing [used to connect the ForntEnd to the BackEnd]
+}
+
+CookieParser => {
+use: (
+server see Cookies accept and action perferm kar pao
+)
+}
+
+MiddleWare => {
+whatis: (
+
+    )
+
+}
+
+/_
+In the Express request methods
+we mostly will use ...
+req.body
+req.params
+req.cookie
+_/
+
+// For Password Hashing we will use the bcrypt lib
+// For web token we will use jwt (Json Web Token)
+
+// the hardest and most challenging part of this project is the videoHistory setup => {
+for that we are gonna use the mongodb Aggregation pipiline lib
+}
+
+// JWT -=> {
+it is a bearer token {
+anyone have this token they can access the data
+}
+{
+we only give the refresh token to the user database
+}
+}
+
+// Mongoose MiddleWare => { We Want to encrypt our passwrod just before it is saved in the database }
+// for that we use the Pre Hooks
+// userSchema.pre("save", () => {}) // Never write like this (As in arrow function we dont have teh referance to "this")
+// and we use async as it takes time for encrypting and decrypting as well
+
+For File Uploading we are using the toolkit / Lib named as "multer" , "fs (File System module by nodejs)" => {
+site => [https://github.com/expressjs/multer]
+
+    to remove a file we will use the unlink technique[]
+
+}
+
+// For Register SUer Steps => {
+// Self = { 1. get data ( details ) from user 2. encode it 3. Store in the database 4. and give the refresh token to the user for his / her use
+}
+// Actual = { 1. Get details from the user 2. Validations -> If few strings are empty or not 3. Check if the user already exists or not { Check either by username or name } 4. Check for images, Check for avatar 5. Upload them to Cloudinary, avatar 6. Create User Object - Create Entry in Db 7. Remove password and refresh token field from the response 8. Check for user Creation 9. Return Response
+}
+}
+
+// Todo List for Login user => {
+self => { - take input from the user from the login page. - save it in a variable - apply check ( as per js series form handling part ) if the username == username && password == password . Then perform some action. - call mongodb to check the db if there is any user with the same username ( email in case ) is present or not , if not throw err . And redirect to register (dnt know how, will plan if situation arise) - if username/email present. Then get its \_id and store it in variable - retreive username and pass from that variable to check if both are same or not. If no then err - if yes then redirect it to the page we want
+( Dnt know the use of refresh token. Actually i didnt get it by now. I hope I will understand after seeing how u are using it ) , now continue to the video.
+}
+actual => { 1. req.body -> data 2. username / email based access 3. find the user 4. password check 5. access and refresh token generation 6. send in secure cookie the refresh and access token
+}
+}
+
+// Javascript new Some Method
