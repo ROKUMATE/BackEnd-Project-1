@@ -9,6 +9,7 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt, { decode } from "jsonwebtoken";
 import cloudinary from "cloudinary";
+import mongoose from "mongoose";
 
 // Function to Generate the Access and Refresh Tokens
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -525,6 +526,174 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         );
 });
 
+// Get the visited Channel Profile Information
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+
+    if (!username) {
+        throw new ApiError(400, "Username is missing");
+    }
+    // // First Method
+    // User.find({username})
+
+    // Second Method // MongoDB aggregration Pipeline
+    const channel = await User.aggregate([
+        // Finding the channel username in the User data base [using the $match operator
+        {
+            // Got all the Channel(user) Details
+            // [And hence adding more field regarding the total subscribers, total channels subscribed to also is we the user is subscribed to that channel or not]
+            $match: {
+                username: username?.toLowerCase,
+            },
+        },
+        // Now add a field of subscribers which is a array of all the users who have subscribed him / her using the $lookup operator
+        {
+            $lookup: {
+                // Here when we are searching from the mongoose we have to give the name of the database name which is stored in mongodb
+                // As its stored in lower case letters and as a pural form
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers",
+            },
+        },
+        // Now add a field subscribedTo as an array of all chanels that he / her have subscribed using the $lookup operator
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo",
+            },
+        },
+        // Now add all the field to it like subscribersCount, channelsSubscribedToCount using the $addFields operator
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "subscribers",
+                },
+                channelsSubscribedToCount: {
+                    $size: "subscribedTo",
+                },
+                // To what to show on the channel page if we are subscribed to that channel or not?
+                isSubscribed: {
+                    $cond: {
+                        if: {
+                            // req.user is us
+                            // Where as we are viewing the page of another channel (user only)
+                            // So we will check if our is there or not in their subscribers list / array
+
+                            // The $in see inside the array also and object also
+                            $in: [req.user?._id, "$subscribers.subscriber"],
+                        },
+                        then: true,
+                        else: false,
+                    },
+                },
+            },
+        },
+        // Now just display the field u want to display to the user using the $project operator
+        {
+            $project: {
+                username: 1,
+                fullName: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1,
+            },
+        },
+    ]);
+
+    // console.log(channel);
+    // what Data type does aggregate pipleline returns
+    // An Array with different object values in it
+    // We have don ematch so we will Get only one value in that array
+
+    if (!channel?.length) {
+        throw new ApiError(404, "Channel Dosnt Exists");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            // aggregration pipleline return an array ---> we have to here remove the first value and give it
+            channel[0],
+            "User Channel Fetched Successfully "
+        )
+    );
+});
+
+// Get User Watch History
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                // If we Directly wrote here req.user._id then it will return a string while of ObjectId:'...' as we are inside mongodb Aggregration pipeline
+                // So to convert it using mongoose
+                _id: new mongoose.Types.ObjectId(req.user._id),
+            },
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                // Nested Lookup
+                pipeline: [
+                    // now we are in videos
+                    // and adding this pipeline to the watchHistory
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            // now this whole user data that we want will go inside the owner field only
+                            // And adding this pipeline to the owner
+                            pipeline: [
+                                {
+                                    // Now we are in owner
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    // Now we have dont a look up so the data is stored in an array and we need the first element of that array
+                    {
+                        // This will update the array value of the field to the object
+                        $addFields: {
+                            owner: {
+                                $first: "owner",
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    ]);
+
+    if (!user) {
+        throw new ApiError(404, "Users WatchHistory not Created!");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            // aggregration pipleline return an array ---> we have to here remove the first value and give it
+            user[0].watchHistory,
+            "The Users Watch History Has been Fetched Successfully!"
+        )
+    );
+});
+
 export {
     registerUser,
     loginUser,
@@ -535,4 +704,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory,
 };
