@@ -257,12 +257,23 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // Controller For Logout of an user
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id, {
-        // $ sign means mongodb operators
-        $set: {
-            refreshToken: undefined,
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            // $ sign means mongodb operators
+            // M - 1
+            // $set: {
+            //     refreshToken: null,
+            // },
+            // M - 2
+            $unset: {
+                refreshToken: 1, // This removes the field from the document
+            },
         },
-    });
+        {
+            new: true, // Comes in M - 2 only
+        }
+    );
 
     const options = {
         httpOnly: true,
