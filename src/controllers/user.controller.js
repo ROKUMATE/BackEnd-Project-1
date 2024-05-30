@@ -337,10 +337,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
-// Changing the users Current Password
+// Changing the users Current Password (U have to send the data in the raw format and not in the body format of the body)
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     // Getting the New Password from the user
-    const { oldPassword, newPassword, confPassword } = req.body;
+    // const { oldPassword, newPassword, confPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
 
     // if (newPassword !== confPassword) {
     //     throw new ApiError(
@@ -348,6 +349,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     //         "The New Password and the Confirm Password are not same"
     //     );
     // }
+    // console.log("The Change Password Route Hit");
 
     const user = await User.findById(req.user?._id);
 

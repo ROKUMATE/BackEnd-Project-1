@@ -39,12 +39,12 @@ router.route("/logout").post(verifyJWT, logoutUser);
 // For Refreshing the access token
 router.route("/refreshToken").post(refreshAccessToken);
 // Change Password
-router.route("./changePassword").post(verifyJWT, changeCurrentPassword);
+router.route("/changePassword").post(verifyJWT, changeCurrentPassword);
 // Get Current User
-router.route("./current-user").get(verifyJWT, getCurrentUser);
+router.route("/current-user").get(verifyJWT, getCurrentUser);
 // Update Account Details
 // We Wont Put "POST" method here else every details will be updated in it
-router.route("./update-account").patch(verifyJWT, updateAccountDetails);
+router.route("/update-account").patch(verifyJWT, updateAccountDetails);
 // Update the user avatar
 router.route("/updateAvatar").post(
     verifyJWT,
